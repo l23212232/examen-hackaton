@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Lab Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="navbar-container"></div>
+
+    <div class="container mb-5">
+        <div class="main-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="m-0">Inventario de Instrumentos</h1>
+                    <p class="text-muted m-0">Gestión y control de equipos de laboratorio</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button id="btn-download" class="btn btn-secondary">📥 Exportar</button>
+                    
+                    <form id="upload-form" style="display:none;">
+                        <input type="file" id="excel-file" name="fileExcel" accept=".xlsx" style="display:none;">
+                        <button type="button" class="btn btn-info text-white" onclick="document.getElementById('excel-file').click()">📤 Importar</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="row mb-4 g-3">
+                <div class="col-md-5 search-container">
+                    <input type="text" id="live-search" class="form-control" placeholder="🔍 Buscar por nombre o categoría...">
+                </div>
+                <div class="col-md-7 text-md-end">
+                    <button id="btn-new" class="btn btn-success" style="display:none;">+ Nuevo Instrumento</button>
+                    
+                    <div id="admin-buttons" class="d-none">
+                        <button id="btn-register-user" class="btn btn-warning">👤 Nuevo Usuario</button>
+                        <button id="btn-view-users" class="btn btn-dark">👥 Ver Usuarios</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nombre del Equipo</th>
+                                <th>Categoría</th>
+                                <th>Estado Actual</th>
+                                <th>Ubicación</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="crudModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalTitle">Instrumento</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="crud-form">
+                        <input type="hidden" id="inst-id">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-secondary">Nombre</label>
+                            <input type="text" id="nombre" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-secondary">Categoría</label>
+                            <input type="text" id="categoria" class="form-control" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary">Estado</label>
+                                <select id="estado" class="form-select">
+                                    <option value="DISPONIBLE">DISPONIBLE</option>
+                                    <option value="PRESTADO">PRESTADO</option>
+                                    <option value="MANTENIMIENTO">MANTENIMIENTO</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary">Ubicación</label>
+                                <input type="text" id="ubicacion" class="form-control">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 mt-3">Guardar Cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title fw-bold" id="userModalTitle">Gestión de Usuario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="user-form">
+                        <input type="hidden" id="user-id">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nombre Completo</label>
+                            <input type="text" id="reg-nombre" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Correo Electrónico</label>
+                            <input type="email" id="reg-correo" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Contraseña</label>
+                            <input type="password" id="reg-password" class="form-control" placeholder="(Opcional al editar)">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Rol de Acceso</label>
+                            <select id="reg-rol" class="form-select">
+                                <option value="ASISTENTE">ASISTENTE</option>
+                                <option value="AUDITOR">AUDITOR</option>
+                                <option value="ADMIN">ADMIN</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-dark w-100 mt-2">Guardar Usuario</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="usersListModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">👥 Directorio de Usuarios</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped mb-0 align-middle">
+                            <thead class="bg-light">
+                                <tr><th>#</th><th>Nombre</th><th>Correo</th><th>Rol</th><th class="text-end pe-4">Acciones</th></tr>
+                            </thead>
+                            <tbody id="users-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        let crudModal, userModal, usersListModal;
+        const role = localStorage.getItem('userRole');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!role) { window.location.href = '/login.html'; return; }
+
+            // Cargar Navbar
+            fetch('navbar.html').then(r => r.text()).then(d => {
+                document.getElementById('navbar-container').innerHTML = d;
+                const btnLogout = document.getElementById('btn-logout');
+                if(btnLogout) btnLogout.onclick = async () => {
+                    await fetch('/api/auth/logout', {method:'POST'});
+                    localStorage.removeItem('userRole'); window.location.href='/login.html';
+                };
+            });
+
+            crudModal = new bootstrap.Modal(document.getElementById('crudModal'));
+            userModal = new bootstrap.Modal(document.getElementById('userModal'));
+            usersListModal = new bootstrap.Modal(document.getElementById('usersListModal'));
+
+            loadData();
+
+            // Configurar botones
+            document.getElementById('btn-new').style.display = 'none';
+            document.getElementById('admin-buttons').classList.remove('d-inline-block'); 
+            document.getElementById('upload-form').style.display = 'none';
+
+            if (role === 'ADMIN' || role === 'ASISTENTE') {
+                document.getElementById('btn-new').style.display = 'inline-block';
+            }
+            if (role === 'ADMIN') {
+                document.getElementById('admin-buttons').classList.remove('d-none');
+                document.getElementById('admin-buttons').classList.add('d-inline-block');
+                document.getElementById('upload-form').style.display = 'inline-block';
+            }
+
+            // Listeners
+            document.getElementById('btn-new').onclick = () => openInstrumentModal();
+            document.getElementById('btn-register-user').onclick = () => openUserModal();
+            document.getElementById('btn-view-users').onclick = loadUsers;
+            document.getElementById('btn-download').onclick = () => window.location.href = '/api/instrumentos/download';
+            document.getElementById('live-search').onkeyup = (e) => loadData(e.target.value);
+            
+            document.getElementById('excel-file').onchange = async (e) => {
+                if (!e.target.files.length) return;
+                const formData = new FormData(); formData.append('fileExcel', e.target.files[0]);
+                try {
+                    const res = await fetch('/api/instrumentos/upload', { method:'POST', body: formData });
+                    const data = await res.json();
+                    if(res.ok) { alert('¡Importación completada! Registros: ' + data.registros); loadData(); } 
+                    else { alert('Error: ' + data.error); }
+                } catch(err) { alert('Error de conexión'); }
+                e.target.value = '';
+            };
+
+            document.getElementById('crud-form').onsubmit = saveInstrument;
+            document.getElementById('user-form').onsubmit = saveUser;
+        });
+
+        async function loadData(q = '') {
+            try {
+                const res = await fetch(q ? `/api/instrumentos/buscar?q=${q}` : '/api/instrumentos');
+                if (res.status === 401) { localStorage.removeItem('userRole'); window.location.href = '/login.html'; return; }
+                
+                const data = await res.json();
+                const tbody = document.getElementById('table-body'); tbody.innerHTML = '';
+                
+                data.forEach((i, index) => {
+                    let btns = '';
+                    if (role === 'ADMIN' || role === 'ASISTENTE') btns += `<button class="btn btn-sm btn-warning action-btn text-dark" onclick='openInstrumentModal(${JSON.stringify(i)})'>✏️</button>`;
+                    if (role === 'ADMIN') btns += `<button class="btn btn-sm btn-danger action-btn" onclick="deleteInst(${i.id})">🗑️</button>`;
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="fw-bold text-muted">${index + 1}</td>
+                            <td class="fw-bold text-primary">${i.nombre}</td>
+                            <td>${i.categoria}</td>
+                            <td><span class="badge bg-${getStatusColor(i.estado)}">${i.estado}</span></td>
+                            <td>${i.ubicacion}</td>
+                            <td class="text-end">${btns}</td>
+                        </tr>`;
+                });
+            } catch (error) { console.error(error); }
+        }
+
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/usuarios');
+                if (!res.ok) return alert('No autorizado');
+                const users = await res.json();
+                const tbody = document.getElementById('users-table-body'); tbody.innerHTML = '';
+                users.forEach((u, index) => {
+                    const btns = `
+                        <button class="btn btn-sm btn-light border action-btn" onclick='openUserModal(${JSON.stringify(u)})'>✏️</button>
+                        <button class="btn btn-sm btn-light border text-danger action-btn" onclick="deleteUser(${u.id})">🗑️</button>
+                    `;
+                    tbody.innerHTML += `<tr>
+                        <td>${index + 1}</td>
+                        <td class="fw-bold">${u.nombre}</td>
+                        <td>${u.correo}</td>
+                        <td><span class="badge bg-info text-dark">${u.rol}</span></td>
+                        <td class="text-end pe-3">${btns}</td>
+                    </tr>`;
+                });
+                usersListModal.show();
+            } catch (error) { alert('Error cargando usuarios'); }
+        }
+
+        // Funciones Modales y CRUD (Igual que antes, lógica intacta)
+        function openInstrumentModal(data = null) {
+            document.getElementById('modalTitle').innerText = data ? 'Editar Instrumento' : 'Nuevo Instrumento';
+            document.getElementById('inst-id').value = data ? data.id : '';
+            document.getElementById('nombre').value = data ? data.nombre : '';
+            document.getElementById('categoria').value = data ? data.categoria : '';
+            document.getElementById('estado').value = data ? data.estado : 'DISPONIBLE';
+            document.getElementById('ubicacion').value = data ? data.ubicacion : '';
+            crudModal.show();
+        }
+
+        function openUserModal(data = null) {
+            document.getElementById('userModalTitle').innerText = data ? 'Editar Usuario' : 'Registrar Nuevo Usuario';
+            document.getElementById('user-id').value = data ? data.id : '';
+            document.getElementById('reg-nombre').value = data ? data.nombre : '';
+            document.getElementById('reg-correo').value = data ? data.correo : '';
+            document.getElementById('reg-rol').value = data ? data.rol : 'ASISTENTE';
+            document.getElementById('reg-password').value = ''; 
+            document.getElementById('reg-password').required = !data; 
+            if(data) usersListModal.hide();
+            userModal.show();
+        }
+
+        async function saveUser(e) {
+            e.preventDefault();
+            const id = document.getElementById('user-id').value;
+            const body = JSON.stringify({
+                nombre: document.getElementById('reg-nombre').value,
+                correo: document.getElementById('reg-correo').value,
+                password: document.getElementById('reg-password').value,
+                rol: document.getElementById('reg-rol').value
+            });
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `/api/usuarios/${id}` : '/api/auth/register';
+            const res = await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body });
+            const data = await res.json();
+            if (res.ok) { alert(id ? 'Actualizado' : 'Registrado'); userModal.hide(); if(id) loadUsers(); else document.getElementById('user-form').reset(); } 
+            else { alert('Error: ' + data.error); }
+        }
+
+        async function saveInstrument(e) {
+            e.preventDefault();
+            const id = document.getElementById('inst-id').value;
+            const body = JSON.stringify({
+                nombre: document.getElementById('nombre').value,
+                categoria: document.getElementById('categoria').value,
+                estado: document.getElementById('estado').value,
+                ubicacion: document.getElementById('ubicacion').value
+            });
+            const res = await fetch(id ? `/api/instrumentos/${id}` : '/api/instrumentos', {
+                method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body
+            });
+            if(res.ok) { crudModal.hide(); loadData(); } else alert('Error');
+        }
+
+        async function deleteInst(id) {
+            if(!confirm('¿Borrar instrumento?')) return;
+            const res = await fetch(`/api/instrumentos/${id}`, { method: 'DELETE' });
+            if(res.ok) loadData();
+        }
+
+        async function deleteUser(id) {
+            if(!confirm('¿Borrar usuario?')) return;
+            const res = await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
+            if(res.ok) loadUsers(); else alert('Error');
+        }
+
+        function getStatusColor(s) { return s==='DISPONIBLE'?'success':(s==='PRESTADO'?'warning':'danger'); }
+    </script>
+</body>
+</html>

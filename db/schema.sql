@@ -1,0 +1,32 @@
+CREATE DATABASE IF NOT EXISTS laboratorio CHARACTER SET utf8mb4;
+USE laboratorio;
+
+CREATE TABLE IF NOT EXISTS usuarios (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(100) NOT NULL,
+  correo VARCHAR(120) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  rol ENUM('ADMIN','ASISTENTE','AUDITOR') NOT NULL DEFAULT 'ASISTENTE'
+);
+
+CREATE TABLE IF NOT EXISTS instrumentos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(120) NOT NULL,
+  categoria VARCHAR(80) NOT NULL,
+  estado ENUM('DISPONIBLE','PRESTADO','MANTENIMIENTO') DEFAULT 'DISPONIBLE',
+  ubicacion VARCHAR(120)
+);
+
+-- (Opcional) préstamos mínimos
+CREATE TABLE IF NOT EXISTS prestamos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  instrumento_id INT NOT NULL,
+  usuario_correo VARCHAR(120) NOT NULL,
+  fecha_salida DATETIME DEFAULT CURRENT_TIMESTAMP,
+  fecha_regreso DATETIME NULL,
+  FOREIGN KEY (instrumento_id) REFERENCES instrumentos(id)
+);
+
+CREATE USER IF NOT EXISTS 'lab_user'@'localhost' IDENTIFIED BY 'lab_pass';
+GRANT ALL PRIVILEGES ON laboratorio.* TO 'lab_user'@'localhost';
+FLUSH PRIVILEGES;

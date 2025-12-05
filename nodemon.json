@@ -1,0 +1,1 @@
+{ "watch": ["server.js", "public"], "exec": "node server.js" }
